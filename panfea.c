@@ -4,8 +4,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
 
 #define SQRT2 1.414213562373095
 
@@ -77,6 +75,10 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 	FILE *file = fopen(argv[1], "r");
+	if(!file) {
+		fprintf(stderr, "Could not open %s!\n", argv[1]);
+		exit(1);
+	}
 	struct application *app = appInit(file);
 	fclose(file);
 	for(;;) {
@@ -131,7 +133,7 @@ void simulate(struct application *sim)
 	for(int i = 1; i < sim->divperlength - 1; i++) {
 		for(int j = 1; j < sim->divperwidth - 1; j++) {
 			unsigned coord = panCoord(sim, i, j);
-			sim->pan[coord].temp += sim->pan[coord].delta;
+			sim->pan[coord].temp += sim->pan[coord].delta * sim->pan[coord].mat;
 			if(!once) {
 				once = true;
 				tempchange = abs(sim->pan[coord].delta);
