@@ -1,0 +1,36 @@
+Requires a configuration file
+Simulates thermal diffusion between two different mediums (brownie and a metal pan)
+Requires a configuration file with the following format:
+
+Number of divisions along the length
+Number of divisions along the width
+Length of the pan
+Width of the pan
+Number of seconds in a timestep
+Temperature of the air (K)
+Temperature of the pan (K)
+Initial temperature of the brownies
+Total mass of the brownies
+Thermal Contact resistance of the brownies to the metal
+Diffusivity of the brownies
+Diffusivity of the pan
+Then the pan configuration itself. For good results, the outer edge must be pan.
+
+Example
+5
+5
+230.0
+230.0
+10.0
+475.0
+350.0
+300.0
+2.0
+0.001
+0.1064
+11.72
+00000
+01110
+01010
+00100
+00000
