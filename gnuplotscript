@@ -1,0 +1,8 @@
+set view map;
+set size square;
+unset surface;
+set contour base;
+set cntrparam bspline;
+set cntrparam levels auto 20;
+set style data lines;
+set dgrid3d
