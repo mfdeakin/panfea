@@ -80,7 +80,6 @@ int main(int argc, char **argv)
 	}
 	struct application *app = appInit(file);
 	fclose(file);
-	
 	for(int round = 0;round < 1000; round++) {
 		writeFile(app, round);
 		simulate(app);
@@ -106,17 +105,25 @@ void simulate(struct application *sim)
 					sim->divwidth,
 					sim->divwidth
 				};
-			sim->pan[coord].delta = 0;
+			sim->pan[coord].delta = -4 * sim->pan[coord].temp *
+				sim->pan[coord].diffusivity * sim->divlength * sim->divwidth;
 			for(int k = 0; k < 4; k++) {
-				long double heatflow =
-					(sim->pan[adjacents[k]].temp - sim->pan[coord].temp) /
-					(lengths[k] / sim->pan[coord].diffusivity +
-					 lengths[k] / sim->pan[adjacents[k]].diffusivity +
-					 1.0 / sim->contactres);
-				sim->pan[coord].delta += heatflow * lengths[k] * sim->pandepth;
+				if(sim->pan[adjacents[k]].mat == MAT_BROWNIE) {
+					sim->pan[coord].delta += sim->pan[adjacents[k]].temp * lengths[k] *
+						sim->pandepth * sim->pan[coord].diffusivity;
+				}
+				else {
+					long double heatflow =
+						(sim->pan[adjacents[k]].temp - sim->pan[coord].temp) /
+						(lengths[k] / sim->pan[coord].diffusivity +
+						 lengths[k] / sim->pan[adjacents[k]].diffusivity +
+						 1.0 / sim->contactres);
+					sim->pan[coord].delta += heatflow * lengths[k] * sim->pandepth;
+				}
 			}
 			sim->pan[coord].delta += (sim->airtemp - sim->pan[coord].temp) *
-				sim->divlength * sim->divwidth * sim->contactres;
+				sim->panlength / sim->divperlength * sim->panwidth / sim->divperwidth *
+				sim->contactres;
 		}
 	}
 	long double tempchange = 0.0;
@@ -133,8 +140,8 @@ void simulate(struct application *sim)
 				maxtemp = sim->pan[coord].temp;
 				mintemp = sim->pan[coord].temp;
 			}
-			else if(abs(tempchange) < abs(sim->pan[coord].delta))
-				tempchange = sim->pan[coord].delta;
+			else if(tempchange < abs(sim->pan[coord].delta))
+				tempchange = abs(sim->pan[coord].delta);
 			if(maxtemp < sim->pan[coord].temp)
 				maxtemp = sim->pan[coord].temp;
 			else if(mintemp > sim->pan[coord].temp)
@@ -207,32 +214,24 @@ struct application *appInit(FILE *file)
 	fscanf(file, "%lf", &diffusivity);
 	fscanf(file, "%lf", &pandiff);
 
-	sim->pan = malloc(sizeof(struct pan[divls * divws]));
 	fseek(file, 1, SEEK_CUR);
+	sim->pan = malloc(sizeof(struct pan[divls * divws]));
 	for(int i = 0; i < divls; i++) {
 		for(int j = 0; j < divws; j++) {
 			int coord = panCoord(sim, i, j);
 			char type;
-			size_t len = fread(&type, sizeof(type), 1, file);
-			if(len > 0 && type == '0') {
+			fread(&type, sizeof(type), 1, file);
+			if(type == '0') {
 				sim->pan[coord].mat = MAT_PAN;
 				sim->pan[coord].temp = pantemp;
 				sim->pan[coord].diffusivity = pandiff;
 			}
-			else if(len > 0 && type == '1') {
+			else if(type == '1') {
 				sim->pan[coord].mat = MAT_BROWNIE;
 				sim->pan[coord].temp = inittemp;
 				sim->pan[coord].delta = 0;
 				sim->pan[coord].mass = mass;
 				sim->pan[coord].diffusivity = diffusivity;
-			}
-			else {
-				printf("i: %d, j: %d, coord: %d, character: %d, "
-							 "length: %d, position: %d\n",
-							 i, j, coord, type, len, ftell(file));
-				if(feof(file)) {
-					printf("Reached end of file\n");
-				}
 			}
 		}
 		fseek(file, 1, SEEK_CUR);
