@@ -55,10 +55,10 @@ struct application {
 	 Number of seconds in a timestep
 	 Temperature of the air (K)
 	 Temperature of the pan (K)
-	 Initial temperature of the brownies
-	 Total mass of the brownies
-	 Thermal Contact resistance of the brownies to the metal
-	 Diffusivity of the brownies
+	 Initial temperature of the brownies (K)
+	 Total mass of the brownies (kg)
+	 Thermal Contact resistance of the brownies to the metal (m^2/s)
+	 Diffusivity of the brownies (
 	 Diffusivity of the pan
 	 Then the pan configuration itself
 */
