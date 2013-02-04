@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	writeFile(app, ++round/100);
+	writeFile(app, (round/100)+2);
 	printf(++round/100);
 }
 
@@ -127,8 +127,8 @@ bool simulate(struct application *sim)
 					 1.0 / sim->contactres);
 				sim->pan[coord].delta += heatflow * lengths[k] * sim->pandepth;
 			}
-			sim->pan[coord].delta += (sim->airtemp - sim->pan[coord].temp) *
-				sim->divlength * sim->divwidth * sim->contactres;
+			//sim->pan[coord].delta += (sim->airtemp - sim->pan[coord].temp) *
+			//	sim->divlength * sim->divwidth * sim->contactres;
 		}
 	}
 	long double tempchange = 0.0;
@@ -172,7 +172,7 @@ bool simulate(struct application *sim)
 void writeFile(struct application *app, int number)
 {
 	char *fname = malloc(sizeof(char[80]));
-	sprintf(fname, "Simultation_Step%05d.dsv", number);
+	sprintf(fname, "Simulation_Step%05d.dsv", number);
 	FILE *file = fopen(fname, "w");
 	for(int i = 0; i < app->divperlength; i++) {
 		for(int j = 0; j < app->divperwidth; j++) {
@@ -260,6 +260,10 @@ struct application *appInit(FILE *file)
 		}
 		fseek(file, 1, SEEK_CUR);
 	}
+	printf("L %zu\nW %Ld\nL %f\nW %f\ndepth %f\nTimestep %f\nAir T %f\nPan T %f\n",
+		sim->divperlength,sim->divperwidth,length,width,depth,timestep,airtemp,pantemp);
+	printf("Init Temp %f\nRes %f\nbr Diffusivity %f\npan diffusion %f\ntempDone %f\n",inittemp,
+		resistivity,diffusivity,pandiff,sim->tempDone);
 	return sim;
 }
 
