@@ -31,6 +31,8 @@ struct pan {
 };
 
 struct application {
+	unsigned iteration;
+
 	long double timestep;
 	long double panlength,
 		panwidth,
@@ -150,12 +152,11 @@ void simulate(struct application *sim)
 		}
 	}
 	average /= sim->panlength * sim->panwidth;
-	static int cnt = 1;
 	printf("Iteration Number: %d\n"
 				 "Max Change: %.12Lf  Average: %.12Lf\n"
 				 "Maximum: %.12Lf  Minimum: %.12Lf\n\n",
-				 cnt, tempchange, average, maxtemp, mintemp);
-	cnt++;
+				 sim->iteration, tempchange, average, maxtemp, mintemp);
+	sim->iteration++;
 }
 
 void writeFile(struct application *app, int number)
@@ -177,6 +178,7 @@ struct application *appInit(FILE *file)
 {
 	struct application *sim;
 	sim = malloc(sizeof(struct application));
+	memset(sim, 0, sizeof(*sim));
 	int divws, divls;
 	fscanf(file, "%d", &divls);
 	fscanf(file, "%d", &divws);
