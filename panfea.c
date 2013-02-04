@@ -7,9 +7,6 @@
 
 #define SQRT2 1.414213562373095
 
-#define VIEWWIDTH 400
-#define VIEWHEIGHT 400
-
 /* kg / m^3 */
 #define BROWNIEDENSITY 803
 /* W / m K */
@@ -84,12 +81,10 @@ int main(int argc, char **argv)
 	struct application *app = appInit(file);
 	fclose(file);
 	
-	writeFile(app, 0);
 	for(int round = 0;round < 1000; round++) {
+		writeFile(app, round);
 		simulate(app);
-		writeFile(app, round+1);
 	}
-
 }
 
 void simulate(struct application *sim)
@@ -132,7 +127,6 @@ void simulate(struct application *sim)
 		for(int j = 1; j < sim->divperwidth - 1; j++) {
 			unsigned coord = panCoord(sim, i, j);
 			sim->pan[coord].temp += sim->pan[coord].delta * sim->pan[coord].mat;
-			//printf("%.12LF, ",sim->pan[coord].temp);
 			if(!once) {
 				once = true;
 				tempchange = abs(sim->pan[coord].delta);
@@ -147,7 +141,6 @@ void simulate(struct application *sim)
 				mintemp = sim->pan[coord].temp;
 			average += sim->pan[coord].temp;
 		}
-		//printf("\n");
 	}
 	average /= sim->panlength * sim->panwidth;
 	printf("Iteration Number: %d\n"
@@ -160,7 +153,7 @@ void simulate(struct application *sim)
 void writeFile(struct application *app, int number)
 {
 	char *fname = malloc(sizeof(char[80]));
-	sprintf(fname, "Simultation_Step%05d.dsv", number);
+	sprintf(fname, "Simulation_Step%05d.dsv", number);
 	FILE *file = fopen(fname, "w");
 	for(int i = 0; i < app->divperlength; i++) {
 		for(int j = 0; j < app->divperwidth; j++) {

@@ -1,3 +1,7 @@
+#!/bin/sh
+for i in Simulation_Step*.dsv
+do
+gnuplot << EOF > "$i.png"
 set view map;
 set size square;
 unset surface;
@@ -6,3 +10,7 @@ set cntrparam bspline;
 set cntrparam levels auto 20;
 set style data lines;
 set dgrid3d
+set term png
+splot '$i'
+EOF
+done
