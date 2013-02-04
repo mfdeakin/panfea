@@ -83,13 +83,9 @@ int main(int argc, char **argv)
 	}
 	struct application *app = appInit(file);
 	fclose(file);
-	
-	writeFile(app, 0);
-	for(int round = 0;round < 1; round++) {
+	for(;;) {
 		simulate(app);
-		writeFile(app, round+1);
 	}
-
 }
 
 void simulate(struct application *sim)
@@ -111,32 +107,25 @@ void simulate(struct application *sim)
 					sim->divwidth,
 					sim->divwidth
 				};
-			sim->pan[coord].delta = 0;
+			sim->pan[coord].delta = -4 * sim->pan[coord].temp *
+				sim->pan[coord].diffusivity * sim->divlength * sim->divwidth;
 			for(int k = 0; k < 4; k++) {
-				bool good = false;
-				bool doog = true;
-				if(false &&sim->pan[adjacents[k]].mat == MAT_BROWNIE) {
-					doog = true;
-					sim->pan[coord].delta += lengths[k] *
-					sim->pandepth * (sim->pan[adjacents[k]].temp * sim->pan[adjacents[k]].diffusivity -
-					sim->pan[coord].temp * sim->pan[coord].diffusivity);
+				if(sim->pan[adjacents[k]].mat == MAT_BROWNIE) {
+					sim->pan[coord].delta += sim->pan[adjacents[k]].temp * lengths[k] *
+						sim->pandepth * sim->pan[coord].diffusivity;
 				}
 				else {
-					good = true;
 					long double heatflow =
 						(sim->pan[adjacents[k]].temp - sim->pan[coord].temp) /
 						(lengths[k] / sim->pan[coord].diffusivity +
-						lengths[k] / sim->pan[adjacents[k]].diffusivity +
-						1.0 / sim->contactres);
+						 lengths[k] / sim->pan[adjacents[k]].diffusivity +
+						 1.0 / sim->contactres);
 					sim->pan[coord].delta += heatflow * lengths[k] * sim->pandepth;
-				}
-				if(good && doog && coord%1000 == 0)
-				{	
-					//printf("[(%d,%d),dlet %.12Lf,k %d]\n", i,j,sim->pan[coord].delta,k);
 				}
 			}
 			sim->pan[coord].delta += (sim->airtemp - sim->pan[coord].temp) *
-				sim->divlength * sim->divwidth * sim->contactres;
+				sim->panlength / sim->divperlength * sim->panwidth / sim->divperwidth *
+				sim->contactres;
 		}
 	}
 	long double tempchange = 0.0;
@@ -147,22 +136,20 @@ void simulate(struct application *sim)
 		for(int j = 1; j < sim->divperwidth - 1; j++) {
 			unsigned coord = panCoord(sim, i, j);
 			sim->pan[coord].temp += sim->pan[coord].delta * sim->pan[coord].mat;
-			//printf("%.12LF, ",sim->pan[coord].temp);
 			if(!once) {
 				once = true;
 				tempchange = abs(sim->pan[coord].delta);
 				maxtemp = sim->pan[coord].temp;
 				mintemp = sim->pan[coord].temp;
 			}
-			else if(abs(tempchange) < abs(sim->pan[coord].delta))
-				tempchange = sim->pan[coord].delta;
+			else if(tempchange < abs(sim->pan[coord].delta))
+				tempchange = abs(sim->pan[coord].delta);
 			if(maxtemp < sim->pan[coord].temp)
 				maxtemp = sim->pan[coord].temp;
 			else if(mintemp > sim->pan[coord].temp)
 				mintemp = sim->pan[coord].temp;
 			average += sim->pan[coord].temp;
 		}
-		//printf("\n");
 	}
 	average /= sim->panlength * sim->panwidth;
 	printf("Iteration Number: %d\n"
