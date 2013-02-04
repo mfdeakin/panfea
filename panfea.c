@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	fclose(file);
 	
 	writeFile(app, 0);
-	for(int round = 0;round < 1; round++) {
+	for(int round = 0;round < 1000; round++) {
 		simulate(app);
 		writeFile(app, round+1);
 	}
@@ -113,27 +113,12 @@ void simulate(struct application *sim)
 				};
 			sim->pan[coord].delta = 0;
 			for(int k = 0; k < 4; k++) {
-				bool good = false;
-				bool doog = true;
-				if(false &&sim->pan[adjacents[k]].mat == MAT_BROWNIE) {
-					doog = true;
-					sim->pan[coord].delta += lengths[k] *
-					sim->pandepth * (sim->pan[adjacents[k]].temp * sim->pan[adjacents[k]].diffusivity -
-					sim->pan[coord].temp * sim->pan[coord].diffusivity);
-				}
-				else {
-					good = true;
-					long double heatflow =
-						(sim->pan[adjacents[k]].temp - sim->pan[coord].temp) /
-						(lengths[k] / sim->pan[coord].diffusivity +
-						lengths[k] / sim->pan[adjacents[k]].diffusivity +
-						1.0 / sim->contactres);
-					sim->pan[coord].delta += heatflow * lengths[k] * sim->pandepth;
-				}
-				if(good && doog && coord%1000 == 0)
-				{	
-					//printf("[(%d,%d),dlet %.12Lf,k %d]\n", i,j,sim->pan[coord].delta,k);
-				}
+				long double heatflow =
+					(sim->pan[adjacents[k]].temp - sim->pan[coord].temp) /
+					(lengths[k] / sim->pan[coord].diffusivity +
+					 lengths[k] / sim->pan[adjacents[k]].diffusivity +
+					 1.0 / sim->contactres);
+				sim->pan[coord].delta += heatflow * lengths[k] * sim->pandepth;
 			}
 			sim->pan[coord].delta += (sim->airtemp - sim->pan[coord].temp) *
 				sim->divlength * sim->divwidth * sim->contactres;
@@ -229,24 +214,32 @@ struct application *appInit(FILE *file)
 	fscanf(file, "%lf", &diffusivity);
 	fscanf(file, "%lf", &pandiff);
 
-	fseek(file, 1, SEEK_CUR);
 	sim->pan = malloc(sizeof(struct pan[divls * divws]));
+	fseek(file, 1, SEEK_CUR);
 	for(int i = 0; i < divls; i++) {
 		for(int j = 0; j < divws; j++) {
 			int coord = panCoord(sim, i, j);
 			char type;
-			fread(&type, sizeof(type), 1, file);
-			if(type == '0') {
+			size_t len = fread(&type, sizeof(type), 1, file);
+			if(len > 0 && type == '0') {
 				sim->pan[coord].mat = MAT_PAN;
 				sim->pan[coord].temp = pantemp;
 				sim->pan[coord].diffusivity = pandiff;
 			}
-			else if(type == '1') {
+			else if(len > 0 && type == '1') {
 				sim->pan[coord].mat = MAT_BROWNIE;
 				sim->pan[coord].temp = inittemp;
 				sim->pan[coord].delta = 0;
 				sim->pan[coord].mass = mass;
 				sim->pan[coord].diffusivity = diffusivity;
+			}
+			else {
+				printf("i: %d, j: %d, coord: %d, character: %d, "
+							 "length: %d, position: %d\n",
+							 i, j, coord, type, len, ftell(file));
+				if(feof(file)) {
+					printf("Reached end of file\n");
+				}
 			}
 		}
 		fseek(file, 1, SEEK_CUR);
