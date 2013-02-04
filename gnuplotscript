@@ -1,6 +1,13 @@
 #!/bin/sh
 for i in Simulation_Step*.dsv
 do
+gnuplot << EOF > "reg$i.png"
+set term png
+splot '$i'
+EOF
+done
+for i in Simulation_Step*.dsv
+do
 gnuplot << EOF > "$i.png"
 set view map;
 set size square;
