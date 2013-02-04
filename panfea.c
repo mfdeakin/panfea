@@ -249,6 +249,7 @@ struct application *appInit(FILE *file)
 				sim->pan[coord].diffusivity = diffusivity;
 			}
 		}
+		fseek(file, 1, SEEK_CUR);
 	}
 	return sim;
 }
