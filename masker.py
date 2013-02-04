@@ -13,7 +13,7 @@ ow = (230,230)
 #ow[1] = int(sys.argv[1])
 
 mask = ""
-mask += str(ow[0]) + "\n" + str(ow[1]) + "\n230.0\n230.0\n10.0\n0.1\n475.0\n350.0\n300.0\n0.001\n0.1064\n11.72\n400.0\n"
+mask += str(ow[0]) + "\n" + str(ow[1]) + "\n230.0\n230.0\n10.0\n0.1\n450.0\n350.0\n300.0\n2.0\n0.1064\n0.0000001072\n0.00001172\n350.0\n"
 for x in range(ow[0]+1):
     for y in range(ow[1]):
         # determine if a point is inside a given polygon or not
